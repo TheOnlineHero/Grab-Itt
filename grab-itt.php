@@ -50,7 +50,7 @@ function grab_itt_shortcode($atts) {
     </script>
   
   <?php
-  echo "<div class=''>Content sourced from: $url</div>";
+  echo "<div class='content-source'>Content sourced from: $url</div>";
 }
 
 function check_grab_itt_dependencies_are_active($plugin_name, $dependencies) {
