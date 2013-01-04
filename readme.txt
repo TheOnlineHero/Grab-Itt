@@ -12,7 +12,7 @@ Grab content from an external site.
 
 == Description ==
 
-Simply grabs content from another website and places it into yours without need to use an API or RSS feed.
+Simply grabs content from another website and places it into yours, without using an API or RSS feed.
 
 == Installation ==
 
