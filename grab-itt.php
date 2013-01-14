@@ -22,9 +22,25 @@ License: GPL2
 */
 require_once(ABSPATH . 'wp-admin/includes/plugin.php');
 require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+require_once(dirname(__FILE__).'/simple_html_dom.php');
 
 function grab_itt_activate() {
-  tom_create_table("grab_itt", array("id mediumint(9) NOT NULL AUTO_INCREMENT", "name VARCHAR(255) DEFAULT ''", "url VARCHAR(255) DEFAULT ''", "css_selector VARCHAR(255) DEFAULT ''"), array("id"));
+  global $wpdb;
+
+  $table_name = $wpdb->prefix . "grab_itt";
+
+  $sql = "CREATE TABLE $table_name (
+  id mediumint(9) NOT NULL AUTO_INCREMENT, 
+  name VARCHAR(255) DEFAULT '',
+  url VARCHAR(255) DEFAULT '',
+  css_selector VARCHAR(255) DEFAULT '',
+  last_cached_date VARCHAR(255),
+  cached_content longtext,
+  PRIMARY KEY  (id)
+  );";
+
+  dbDelta($sql);
+
 }
 register_activation_hook( __FILE__, 'grab_itt_activate' );
 
@@ -39,18 +55,45 @@ add_shortcode( 'grab-itt', 'grab_itt_shortcode' );
 
 function grab_itt_shortcode($atts) {
   $url = $atts['url'];
-  $content = str_replace("'", "\"", file_get_contents($url));
-  $content = str_replace("/", "\/", $content);
   $css_selector = $atts['css_selector'];
-  ?>
+
+  $row = tom_get_row("grab_itt", array("url", "css_selector", "last_cached_date", "cached_content"), "url = '$url' AND css_selector = '$css_selector'");
   
-    <script language="javascript">
-      var content = '<?php echo(tom_compress_content($content)); ?>';
-      document.writeln(jQuery(jQuery(content)).find("<?php echo($css_selector); ?>").html());
-    </script>
-  
-  <?php
+  // Check if record does not exist.
+  if ($row->url == "" || $row->url == null) { 
+    // Create record.
+    $content = grab_itt_content_from_url($url, $css_selector);
+    tom_insert_record("grab_itt", array("url" => $url, "css_selector" => $css_selector, "last_cached_date" => date("d/m/y"), "cached_content" => $content));
+    echo $content;
+  } else {
+    // Check the last cached date.
+
+    // If cached date has not expired.
+    if ($row->last_cached_date == date("d/m/y")) {
+      echo $row->cached_content;
+    } else {
+      // If cached date has expired.
+      // Delete existing record and create new one.
+      tom_delete_record("grab_itt", "url = $url AND css_selector = $css_selector");
+      $content = grab_itt_content_from_url($url, $css_selector);
+      tom_insert_record("grab_itt", array("url" => $url, "css_selector" => $css_selector, "last_cached_date" => date("d/m/y"), "cached_content" => $content));
+      echo $content;
+    }
+
+  }
+   
   echo "<div class='content-source'>Content sourced from: $url</div>";
+}
+
+function grab_itt_content_from_url($url, $css_selector) {
+  // get DOM from URL or file
+  $html = file_get_html($url);
+  // find all link
+  $content = "";
+  foreach($html->find($css_selector) as $e) {
+    $content .= $e->outertext;
+  }
+  return $content;
 }
 
 function check_grab_itt_dependencies_are_active($plugin_name, $dependencies) {
@@ -87,7 +130,7 @@ function check_grab_itt_dependencies_are_active($plugin_name, $dependencies) {
   }
 }
 
-check_grab_itt_dependencies_are_active(
+@check_grab_itt_dependencies_are_active(
   "Grab Itt", 
   array(
     "Tom M8te" => array("plugin"=>"tom-m8te/tom-m8te.php", "url" => "http://downloads.wordpress.org/plugin/tom-m8te.zip", "version" => "1.1"))
