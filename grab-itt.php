@@ -40,10 +40,19 @@ function grab_itt_activate() {
   );";
 
   dbDelta($sql);
-
 }
 register_activation_hook( __FILE__, 'grab_itt_activate' );
 
+//call register settings function
+add_action( 'admin_init', 'register_grab_itt_settings' );
+function register_grab_itt_settings() {
+  //register our settings
+  @check_grab_itt_dependencies_are_active(
+    "Grab Itt", 
+    array(
+      "Tom M8te" => array("plugin"=>"tom-m8te/tom-m8te.php", "url" => "http://downloads.wordpress.org/plugin/tom-m8te.zip", "version" => "1.1"))
+  );
+}
 
 add_action('admin_menu', 'register_grab_itt_page');
 
@@ -122,18 +131,14 @@ function check_grab_itt_dependencies_are_active($plugin_name, $dependencies) {
   }
   $msg_content .= implode(", ", $download_plugins_array)."</p></div>";
   if (count($plugins_array) > 0) {
+    deactivate_plugins( __FILE__,true);
     echo($msg_content);
   } 
 
   if (count($upgrades_array) > 0) {
+    deactivate_plugins( __FILE__,true);
     echo "<div class='updated'><p>$plugin_name requires the following plugins to be updated: ".implode(", ", $upgrades_array).".</p></div>";
   }
 }
-
-@check_grab_itt_dependencies_are_active(
-  "Grab Itt", 
-  array(
-    "Tom M8te" => array("plugin"=>"tom-m8te/tom-m8te.php", "url" => "http://downloads.wordpress.org/plugin/tom-m8te.zip", "version" => "1.1"))
-);
 
 ?>
