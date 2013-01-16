@@ -20,8 +20,7 @@ Version: 1.0
 Author: TheOnlineHero - Tom Skroza
 License: GPL2
 */
-require_once(ABSPATH . 'wp-admin/includes/plugin.php');
-require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
 require_once(dirname(__FILE__).'/simple_html_dom.php');
 
 function grab_itt_activate() {
@@ -38,7 +37,7 @@ function grab_itt_activate() {
   cached_content longtext,
   PRIMARY KEY  (id)
   );";
-
+  require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
   dbDelta($sql);
 }
 register_activation_hook( __FILE__, 'grab_itt_activate' );
@@ -114,24 +113,24 @@ function check_grab_itt_dependencies_are_active($plugin_name, $dependencies) {
     $plugin = get_plugin_data(PLUGINPATH."/".$value["plugin"],true,true);
     $url = $value["url"];
     if (!is_plugin_active($value["plugin"])) {
-      array_push($plugins_array, "<a href='$url'>$key</a>");
+      array_push($plugins_array, $key);
     } else {
       if (isset($value["version"]) && str_replace(".", "", $plugin["Version"]) < str_replace(".", "", $value["version"])) {
-        array_push($upgrades_array, "<a href='$url'>$key</a>");
+        array_push($upgrades_array, $key);
       }
     }
   }
-  $msg_content .= implode(", ", $plugins_array) . " before you can use $plugin_name. Please ";
+  $msg_content .= implode(", ", $plugins_array) . " before you can use $plugin_name. Please go to Plugins/Add New and search/install the following plugin(s): ";
   $download_plugins_array = array();
   foreach ($dependencies as $key => $value) {
     if (!is_plugin_active($value["plugin"])) {
       $url = $value["url"];
-      array_push($download_plugins_array, "<a href='$url'>click here to download $key</a>");
+      array_push($download_plugins_array, $key);
     }
   }
   $msg_content .= implode(", ", $download_plugins_array)."</p></div>";
   if (count($plugins_array) > 0) {
-    deactivate_plugins( __FILE__,true);
+    deactivate_plugins( __FILE__, true);
     echo($msg_content);
   } 
 
