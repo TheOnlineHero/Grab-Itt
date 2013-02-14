@@ -4,7 +4,7 @@ Donate link:
 Tags: plugin, content, grab, post, page, external, links
 Requires at least: 3.3
 Tested up to: 3.4
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,7 +19,7 @@ Simply grabs content from another website and places it into yours, without usin
 1) Install WordPress 3.4.2 or higher
 
 2) Download the following file:
-http://downloads.wordpress.org/plugin/grab-itt.1.0.zip
+http://downloads.wordpress.org/plugin/grab-itt.1.1.zip
 
 3) Login to WordPress admin, click on Plugins / Add New / Upload, then upload the zip file you just downloaded.
 
@@ -27,11 +27,19 @@ http://downloads.wordpress.org/plugin/grab-itt.1.0.zip
 
 == Changelog ==
 
+= 1.1 =
+
+* Fixed up shortcode render code.
+
 = 1.0 =
 
 * First commit.
 
 == Upgrade notice ==
+
+= 1.1 =
+
+* Fixed up shortcode render code.
 
 = 1.0 =
 

@@ -16,7 +16,7 @@ http://downloads.wordpress.org/plugin/grab-itt.zip
 
 4) Activate the plugin.
 
-Version: 1.0
+Version: 1.1
 Author: TheOnlineHero - Tom Skroza
 License: GPL2
 */
@@ -62,6 +62,7 @@ function register_grab_itt_page() {
 add_shortcode( 'grab-itt', 'grab_itt_shortcode' );
 
 function grab_itt_shortcode($atts) {
+  $return_content = "";
   $url = $atts['url'];
   $css_selector = $atts['css_selector'];
 
@@ -72,30 +73,37 @@ function grab_itt_shortcode($atts) {
     // Create record.
     $content = grab_itt_content_from_url($url, $css_selector);
     tom_insert_record("grab_itt", array("url" => $url, "css_selector" => $css_selector, "last_cached_date" => date("d/m/y"), "cached_content" => $content));
-    echo $content;
+    $return_content .= $content;
   } else {
     // Check the last cached date.
 
     // If cached date has not expired.
     if ($row->last_cached_date == date("d/m/y")) {
-      echo $row->cached_content;
+      $return_content .= $row->cached_content;
     } else {
       // If cached date has expired.
       // Delete existing record and create new one.
       tom_delete_record("grab_itt", "url = $url AND css_selector = $css_selector");
       $content = grab_itt_content_from_url($url, $css_selector);
       tom_insert_record("grab_itt", array("url" => $url, "css_selector" => $css_selector, "last_cached_date" => date("d/m/y"), "cached_content" => $content));
-      echo $content;
+      $return_content .= $content;
     }
 
   }
    
-  echo "<div class='content-source'>Content sourced from: $url</div>";
+  $return_content .= "<div class='content-source'>Content sourced from: $url</div>";
+  return $return_content;
 }
 
 function grab_itt_content_from_url($url, $css_selector) {
   // get DOM from URL or file
   $html = file_get_html($url);
+
+  foreach ($html->find("img") as $node)
+    {
+        $node->outertext = '';
+    }
+
   // find all link
   $content = "";
   foreach($html->find($css_selector) as $e) {
@@ -103,6 +111,45 @@ function grab_itt_content_from_url($url, $css_selector) {
   }
   return $content;
 }
+
+// TODO
+/*
+Create admin panel that crawls through multiple sites:
+
+Able to then create post based on content being brought in.
+http://codex.wordpress.org/Function_Reference/wp_insert_post
+
+ <?php wp_insert_post( $post, $wp_error ); ?> 
+
+Parameters
+$post
+(array) (required) An array representing the elements that make up a post. There is a one-to-one relationship between these elements and the names of columns in the wp_posts table in the database.
+Default: None
+
+$post = array(
+  'ID'             => [ <post id> ] //Are you updating an existing post?
+  'menu_order'     => [ <order> ] //If new post is a page, it sets the order in which it should appear in the tabs.
+  'comment_status' => [ 'closed' | 'open' ] // 'closed' means no comments.
+  'ping_status'    => [ 'closed' | 'open' ] // 'closed' means pingbacks or trackbacks turned off
+  'pinged'         => [ ? ] //?
+  'post_author'    => [ <user ID> ] //The user ID number of the author.
+  'post_category'  => [ array(<category id>, <...>) ] //post_category no longer exists, try wp_set_post_terms() for setting a post's categories
+  'post_content'   => [ <the text of the post> ] //The full text of the post.
+  'post_date'      => [ Y-m-d H:i:s ] //The time post was made.
+  'post_date_gmt'  => [ Y-m-d H:i:s ] //The time post was made, in GMT.
+  'post_excerpt'   => [ <an excerpt> ] //For all your post excerpt needs.
+  'post_name'      => [ <the name> ] // The name (slug) for your post
+  'post_parent'    => [ <post ID> ] //Sets the parent of the new post.
+  'post_password'  => [ ? ] //password for post?
+  'post_status'    => [ 'draft' | 'publish' | 'pending'| 'future' | 'private' | custom registered status ] //Set the status of the new post.
+  'post_title'     => [ <the title> ] //The title of your post.
+  'post_type'      => [ 'post' | 'page' | 'link' | 'nav_menu_item' | custom post type ] //You may want to insert a regular post, page, link, a menu item or some custom post type
+  'tags_input'     => [ '<tag>, <tag>, <...>' ] //For tags.
+  'to_ping'        => [ ? ] //?
+  'tax_input'      => [ array( 'taxonomy_name' => array( 'term', 'term2', 'term3' ) ) ] // support for custom taxonomies. 
+);  
+*/
+
 
 function check_grab_itt_dependencies_are_active($plugin_name, $dependencies) {
   $msg_content = "<div class='updated'><p>Sorry for the confusion but you must install and activate ";
@@ -138,6 +185,15 @@ function check_grab_itt_dependencies_are_active($plugin_name, $dependencies) {
     deactivate_plugins( __FILE__,true);
     echo "<div class='updated'><p>$plugin_name requires the following plugins to be updated: ".implode(", ", $upgrades_array).".</p></div>";
   }
+}
+
+function removeNode($selector) {
+    foreach ($html->find($selector) as $node)
+    {
+        $node->outertext = '';
+    }
+
+    $this->load($this->save());        
 }
 
 ?>
